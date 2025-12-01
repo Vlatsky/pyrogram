@@ -16,17 +16,26 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from .future_salt import FutureSalt
-from .future_salts import FutureSalts
-from .gzip_packed import GzipPacked
-from .list import List
-from .message import Message
-from .msg_container import MsgContainer
-from .primitives.bool import Bool, BoolFalse, BoolTrue
-from .primitives.bytes import Bytes
-from .primitives.double import Double
-from .primitives.int import Int, Long, Int128, Int256
-from .primitives.string import String
-from .primitives.vector import Vector
-from .base_type_meta import BaseTypeMeta
-from .tl_object import TLObject
+import pyrogram
+from pyrogram import raw
+
+
+class ReuseStarSubscription:
+    async def reuse_star_subscription(self: "pyrogram.Client", subscription_id: str) -> bool:
+        """Reuses an active Telegram Star subscription to a channel chat and joins the chat again.
+
+        .. include:: /_includes/usable-by/users.rst
+
+        Parameters:
+            subscription_id (``str``):
+                Identifier of the subscription.
+
+        Returns:
+            ``bool``: On success, True is returned.
+        """
+        return await self.invoke(
+            raw.functions.payments.FulfillStarsSubscription(
+                peer=raw.types.InputPeerSelf(),
+                subscription_id=subscription_id,
+            )
+        )

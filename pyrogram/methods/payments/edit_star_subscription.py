@@ -16,43 +16,32 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Union
-
 import pyrogram
 from pyrogram import raw
 
 
-class UnpinForumTopic:
-    async def unpin_forum_topic(
-        self: "pyrogram.Client",
-        chat_id: Union[int, str],
-        topic_id: int
+class EditStarSubscription:
+    async def edit_star_subscription(
+        self: "pyrogram.Client", subscription_id: str, is_canceled: bool
     ) -> bool:
-        """Unpin a forum topic.
+        """Cancels or re-enables Telegram Star subscription.
 
         .. include:: /_includes/usable-by/users.rst
 
         Parameters:
-            chat_id (``int`` | ``str``):
-                Unique identifier (int) or username (str) of the target chat.
+            subscription_id (``str``):
+                Identifier of the subscription to change.
 
-            topic_id (``int``):
-                Unique identifier (int) of the target forum topic.
+            is_canceled (``bool``):
+                New value of is_canceled.
 
         Returns:
             ``bool``: On success, True is returned.
-
-        Example:
-            .. code-block:: python
-
-                await app.unpin_forum_topic(chat_id, topic_id)
         """
-        await self.invoke(
-            raw.functions.messages.UpdatePinnedForumTopic(
-                peer=await self.resolve_peer(chat_id),
-                topic_id=topic_id,
-                pinned=False
+        return await self.invoke(
+            raw.functions.payments.ChangeStarsSubscription(
+                peer=raw.types.InputPeerSelf(),
+                subscription_id=subscription_id,
+                canceled=is_canceled,
             )
         )
-
-        return True

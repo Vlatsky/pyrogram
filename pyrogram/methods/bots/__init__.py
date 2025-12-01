@@ -24,6 +24,7 @@ from .answer_web_app_query import AnswerWebAppQuery
 from .create_invoice_link import CreateInvoiceLink
 from .cancel_stars_subscription import CancelStarSubscription
 from .delete_bot_commands import DeleteBotCommands
+from .edit_user_star_subscription import EditUserStarSubscription
 from .get_bot_commands import GetBotCommands
 from .get_bot_default_privileges import GetBotDefaultPrivileges
 from .get_bot_info_description import GetBotInfoDescription
@@ -66,6 +67,7 @@ class Bots(
     SetBotCommands,
     GetBotCommands,
     DeleteBotCommands,
+    EditUserStarSubscription,
     SetBotDefaultPrivileges,
     SetBotInfoDescription,
     SetBotInfoShortDescription,

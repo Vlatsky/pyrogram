@@ -80,6 +80,12 @@ class Gift(Object):
         from_user (:obj:`~pyrogram.types.User`, *optional*):
             User who sent the star gift.
 
+        host_id (``int``, *optional*):
+            Identifier of the user or the chat to which the upgraded gift was assigned from blockchain.
+
+        host (:obj:`~pyrogram.types.Chat`, *optional*):
+            User or the chat to which the upgraded gift was assigned from blockchain.
+
         owner (:obj:`~pyrogram.types.Chat`, *optional*):
             Current gift owner.
 
@@ -137,6 +143,9 @@ class Gift(Object):
 
         prepaid_upgrade_hash (``str``, *optional*):
             Hash of the upgrade message.
+
+        drop_original_details_star_count (``int``, *optional*):
+            Number of Telegram Stars that must be paid to drop original details of the upgraded gift.
 
         can_upgrade (``bool``, *optional*):
             True, if the gift can be upgraded.
@@ -217,6 +226,8 @@ class Gift(Object):
         last_sale_date: Optional[datetime] = None,
         locked_until_date: Optional[datetime] = None,
         from_user: Optional["types.User"] = None,
+        host_id: Optional[int] = None,
+        host: Optional["types.Chat"] = None,
         owner: Optional["types.Chat"] = None,
         owner_name: Optional[str] = None,
         owner_address: Optional[str] = None,
@@ -241,6 +252,7 @@ class Gift(Object):
         value_currency: Optional[str] = None,
         value_amount: Optional[int] = None,
         prepaid_upgrade_hash: Optional[str] = None,
+        drop_original_details_star_count: Optional[int] = None,
         can_upgrade: Optional[bool] = None,
         can_export_at: Optional[datetime] = None,
         can_transfer_at: Optional[datetime] = None,
@@ -274,6 +286,8 @@ class Gift(Object):
         self.last_sale_date = last_sale_date
         self.locked_until_date = locked_until_date
         self.from_user = from_user
+        self.host_id = host_id
+        self.host = host
         self.owner = owner
         self.owner_name = owner_name
         self.owner_address = owner_address
@@ -298,6 +312,7 @@ class Gift(Object):
         self.value_currency = value_currency
         self.value_amount = value_amount
         self.prepaid_upgrade_hash = prepaid_upgrade_hash
+        self.drop_original_details_star_count = drop_original_details_star_count
         self.can_upgrade = can_upgrade
         self.can_export_at = can_export_at
         self.can_transfer_at = can_transfer_at
@@ -324,7 +339,7 @@ class Gift(Object):
             return await Gift._parse_regular(client, gift, users, chats)
         elif isinstance(gift, raw.types.StarGiftUnique):
             return await Gift._parse_unique(client, gift, users, chats)
-        elif isinstance(gift, raw.types.StarGiftSaved):
+        elif isinstance(gift, raw.types.SavedStarGift):
             return await Gift._parse_saved(client, gift, users, chats)
 
     @staticmethod
@@ -373,7 +388,8 @@ class Gift(Object):
         if not isinstance(star_gift, raw.types.StarGiftUnique):
             return
 
-        owner_id = utils.get_raw_peer_id(star_gift.owner_id)
+        raw_host_id = utils.get_raw_peer_id(star_gift.host_id)
+        raw_owner_id = utils.get_raw_peer_id(star_gift.owner_id)
 
         return Gift(
             id=star_gift.id,
@@ -390,7 +406,9 @@ class Gift(Object):
             is_premium=star_gift.require_premium,
             is_theme_available=star_gift.theme_available,
             used_theme_chat_id=utils.get_peer_id(star_gift.theme_peer) if star_gift.theme_peer else None,
-            owner=types.Chat._parse_chat(client, users.get(owner_id) or chats.get(owner_id)),
+            host_id=utils.get_peer_id(star_gift.host_id) if star_gift.host_id else None,
+            host=types.Chat._parse_chat(client, users.get(raw_host_id) or chats.get(raw_host_id)),
+            owner=types.Chat._parse_chat(client, users.get(raw_owner_id) or chats.get(raw_owner_id)),
             owner_name=star_gift.owner_name,
             owner_address=star_gift.owner_address,
             gift_address=star_gift.gift_address,
@@ -436,6 +454,7 @@ class Gift(Object):
         parsed_gift.caption_entities = caption_entities
         parsed_gift.prepaid_upgrade_hash = saved_gift.prepaid_upgrade_hash
         parsed_gift.message_id = saved_gift.msg_id or saved_gift.saved_id
+        parsed_gift.drop_original_details_star_count = saved_gift.drop_original_details_stars
         parsed_gift.can_export_at = utils.timestamp_to_datetime(saved_gift.can_export_at)
         parsed_gift.convert_price = parsed_gift.convert_price or saved_gift.convert_stars
         parsed_gift.upgrade_price = parsed_gift.upgrade_price or saved_gift.upgrade_stars

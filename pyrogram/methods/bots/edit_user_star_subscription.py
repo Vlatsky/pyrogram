@@ -22,37 +22,35 @@ import pyrogram
 from pyrogram import raw
 
 
-class UnpinForumTopic:
-    async def unpin_forum_topic(
+class EditUserStarSubscription:
+    async def edit_user_star_subscription(
         self: "pyrogram.Client",
-        chat_id: Union[int, str],
-        topic_id: int
+        user_id: Union[int, str],
+        telegram_payment_charge_id: str,
+        is_canceled: bool,
     ) -> bool:
-        """Unpin a forum topic.
+        """Cancels or re-enables Telegram Star subscription for a user.
 
-        .. include:: /_includes/usable-by/users.rst
+        .. include:: /_includes/usable-by/bots.rst
 
         Parameters:
-            chat_id (``int`` | ``str``):
-                Unique identifier (int) or username (str) of the target chat.
+            user_id (``int`` | ``str``):
+                Unique identifier (int) or username (str) of the target user.
 
-            topic_id (``int``):
-                Unique identifier (int) of the target forum topic.
+            telegram_payment_charge_id (``str``):
+                Telegram payment identifier of the subscription.
+
+            is_canceled (``bool``):
+                Pass True to cancel the subscription.
+                Pass False to allow the user to enable it.
 
         Returns:
             ``bool``: On success, True is returned.
-
-        Example:
-            .. code-block:: python
-
-                await app.unpin_forum_topic(chat_id, topic_id)
         """
-        await self.invoke(
-            raw.functions.messages.UpdatePinnedForumTopic(
-                peer=await self.resolve_peer(chat_id),
-                topic_id=topic_id,
-                pinned=False
+        return await self.invoke(
+            raw.functions.payments.BotCancelStarsSubscription(
+                user_id=await self.resolve_peer(user_id),
+                charge_id=telegram_payment_charge_id,
+                restore=is_canceled,
             )
         )
-
-        return True

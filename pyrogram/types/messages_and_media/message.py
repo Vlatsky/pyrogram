@@ -426,6 +426,9 @@ class Message(Object, Update):
         suggest_profile_photo (:obj:`~pyrogram.types.Photo`, *optional*):
             Service message: suggested profile photo.
 
+        suggest_birthday (:obj:`~pyrogram.types.Birthday`, *optional*):
+            Service message: suggested birthday.
+
         users_shared (:obj:`~pyrogram.types.UsersShared`, *optional*):
             Service message: users shared information.
 
@@ -657,6 +660,7 @@ class Message(Object, Update):
         gift: Optional["types.Gift"] = None,
         is_prepaid_upgrade: Optional[bool] = None,
         suggest_profile_photo: Optional["types.Photo"] = None,
+        suggest_birthday: Optional["types.Birthday"] = None,
         users_shared: Optional["types.UsersShared"] = None,
         chat_shared: Optional["types.ChatShared"] = None,
         successful_payment: Optional["types.SuccessfulPayment"] = None,
@@ -815,6 +819,7 @@ class Message(Object, Update):
         self.gift = gift
         self.is_prepaid_upgrade = is_prepaid_upgrade
         self.suggest_profile_photo = suggest_profile_photo
+        self.suggest_birthday = suggest_birthday
         self.users_shared = users_shared
         self.chat_shared = chat_shared
         self.successful_payment = successful_payment
@@ -928,6 +933,7 @@ class Message(Object, Update):
         gift = None
         is_prepaid_upgrade = None
         suggest_profile_photo = None
+        suggest_birthday = None
         forum_topic_created = None
         forum_topic_edited = None
         general_forum_topic_hidden = None
@@ -1134,6 +1140,9 @@ class Message(Object, Update):
         elif isinstance(action, raw.types.MessageActionSuggestProfilePhoto):
             service_type = enums.MessageServiceType.SUGGEST_PROFILE_PHOTO
             suggest_profile_photo = types.Photo._parse(client, action.photo)
+        elif isinstance(action, raw.types.MessageActionSuggestBirthday):
+            service_type = enums.MessageServiceType.SUGGEST_BIRTHDAY
+            suggest_birthday = types.Birthday._parse(action.birthday)
         elif isinstance(action, raw.types.MessageActionTopicCreate):
             service_type = enums.MessageServiceType.FORUM_TOPIC_CREATED
             forum_topic_created = types.ForumTopicCreated._parse(message)
@@ -1215,6 +1224,7 @@ class Message(Object, Update):
             suggested_post_approved=suggested_post_approved,
             suggested_post_paid=suggested_post_paid,
             suggested_post_refunded=suggested_post_refunded,
+            suggest_birthday=suggest_birthday,
             phone_call_ended=phone_call_ended,
             phone_call_started=phone_call_started,
             giveaway_prize_stars=giveaway_prize_stars,
@@ -1372,7 +1382,10 @@ class Message(Object, Update):
                 media_type = enums.MessageMediaType.PHOTO
                 has_media_spoiler = media.spoiler
             elif isinstance(media, raw.types.MessageMediaGeo):
-                location = types.Location._parse(client, media.geo)
+                location = types.Location._parse(media.geo)
+                media_type = enums.MessageMediaType.LOCATION
+            elif isinstance(media, raw.types.MessageMediaGeoLive):
+                location = types.Location._parse_media(media)
                 media_type = enums.MessageMediaType.LOCATION
             elif isinstance(media, raw.types.MessageMediaContact):
                 contact = types.Contact._parse(client, media)
@@ -1397,6 +1410,7 @@ class Message(Object, Update):
                 media_type = enums.MessageMediaType.STORY
             elif isinstance(media, raw.types.MessageMediaDocument):
                 doc = media.document
+                has_media_spoiler = media.spoiler
 
                 if isinstance(doc, raw.types.Document):
                     attributes = {type(i): i for i in doc.attributes}
@@ -1409,9 +1423,13 @@ class Message(Object, Update):
 
                     if raw.types.DocumentAttributeAnimated in attributes:
                         video_attributes = attributes.get(raw.types.DocumentAttributeVideo, None)
-                        animation = types.Animation._parse(client, doc, video_attributes, file_name)
-                        media_type = enums.MessageMediaType.ANIMATION
-                        has_media_spoiler = media.spoiler
+
+                        if video_attributes and video_attributes.round_message:
+                            video_note = types.VideoNote._parse(client, doc, video_attributes, media.ttl_seconds)
+                            media_type = enums.MessageMediaType.VIDEO_NOTE
+                        else:
+                            animation = types.Animation._parse(client, doc, video_attributes, file_name)
+                            media_type = enums.MessageMediaType.ANIMATION
                     elif raw.types.DocumentAttributeSticker in attributes:
                         sticker = await types.Sticker._parse(client, doc, attributes)
                         media_type = enums.MessageMediaType.STICKER
@@ -1424,7 +1442,6 @@ class Message(Object, Update):
                         else:
                             video = types.Video._parse(client, doc, video_attributes, file_name, media.ttl_seconds, media.video_cover, media.video_timestamp, media.alt_documents)
                             media_type = enums.MessageMediaType.VIDEO
-                            has_media_spoiler = media.spoiler
                     elif raw.types.DocumentAttributeAudio in attributes:
                         audio_attributes = attributes[raw.types.DocumentAttributeAudio]
 
@@ -1882,7 +1899,7 @@ class Message(Object, Update):
         Use as a shortcut for:
 
         .. code-block:: python
-        
+
             from pyrogram import types
 
             await client.send_message(
