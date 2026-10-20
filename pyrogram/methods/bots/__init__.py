@@ -26,6 +26,7 @@ from .answer_web_app_query import AnswerWebAppQuery
 from .check_bot_username import CheckBotUsername
 from .create_bot import CreateBot
 from .create_invoice_link import CreateInvoiceLink
+from .cancel_stars_subscription import CancelStarSubscription
 from .delete_bot_commands import DeleteBotCommands
 from .delete_ephemeral_message import DeleteEphemeralMessage
 from .edit_ephemeral_message_caption import EditEphemeralMessageCaption
@@ -68,6 +69,7 @@ class Bots(
     AnswerInlineQuery,
     AnswerPreCheckoutQuery,
     AnswerShippingQuery,
+    CancelStarSubscription,
     CreateInvoiceLink,
     GetInlineBotResults,
     GetManagedBotAccessSettings,
